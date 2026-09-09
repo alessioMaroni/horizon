@@ -1,4 +1,4 @@
-// Copyright (c) 2026 MARTCS Kernel Project
+// Copyright (c) 2026 NewHorizon Kernel Project
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -9,7 +9,7 @@
 //! # Font Logic Module
 //!
 //! This module manages font selection, typography configuration, and low-level character
-//! rendering for the MARTCS kernel's output subsystem. It provides robust abstractions
+//! rendering for the NewHorizon kernel's output subsystem. It provides robust abstractions
 //! to switch between different font rendering engines
 //! (such as bitmap matrices and future vector outlines)
 //! and draws characters directly onto the target framebuffer.

@@ -15,11 +15,11 @@ build-x86_64: build-ada
 	RUSTFLAGS="\
 		-C link-arg=$(CURDIR)/ada/time/obj/time.obj \
 		-C link-arg=$(CURDIR)/ada/memory/obj/memory.obj" \
-		cargo +nightly build --package MARTCS-kernel --target $(TARGET)
+		cargo +nightly build --package NewHorizon-kernel --target $(TARGET)
 		
 	rm -rf target/esp
 	mkdir -p target/esp/EFI/BOOT
-	cp target/$(TARGET)/debug/MARTCS-kernel.efi target/esp/EFI/BOOT/BOOTX64.EFI
+	cp target/$(TARGET)/debug/NewHorizon-kernel.efi target/esp/EFI/BOOT/BOOTX64.EFI
 
 run-x86_64: build-x86_64
 	qemu-system-x86_64 \

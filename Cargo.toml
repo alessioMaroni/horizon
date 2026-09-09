@@ -10,14 +10,14 @@ exclude = [
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-authors = ["The MARTCS Kernel Project"]
+authors = ["The NewHorizon Kernel Project"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/alessioMaroni/MARTCS"
+repository = "https://github.com/alessioMaroni/NewHorizon"
 
 [workspace.dependencies]
 
 [package]
-name = "MARTCS-kernel"
+name = "NewHorizon-kernel"
 version = "0.7.6"
 authors.workspace = true
 license.workspace = true
