@@ -1,1 +1,1 @@
-# The NewHorizon Kernel Project
+# The Horizon Kernel Project 

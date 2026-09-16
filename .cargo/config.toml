@@ -42,6 +42,12 @@ rustflags = [
     "-C", "target-feature=-sse,-sse2,-avx,-avx2",
 ]
 
+[target.thumbv6m-none-eabi]
+rustflags = [
+    "-C", "link-arg=-Tlink.x",
+    "-C", "link-arg=--nmagic",
+]
+
 [profile.dev]
 panic = "abort"
 overflow-checks = true

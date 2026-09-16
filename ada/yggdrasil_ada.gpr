@@ -1,8 +1,8 @@
-project NewHorizon_Ada is
+project Horizon_Ada is
    for Source_Dirs use ("time/src", "memory/src");
    for Object_Dir use "obj";
 
    package Compiler is
       for Switches ("Ada") use ("-O2", "-ffreestanding", "-nostdlib", "-mno-red-zone");
    end Compiler;
-end NewHorizon_Ada;
+end Horizon_Ada;

@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "NewHorizon-kernel"
+name = "Horizon-kernel"
 version = "0.7.4"
 dependencies = [
  "uefi",

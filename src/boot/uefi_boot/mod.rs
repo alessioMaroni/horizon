@@ -1,4 +1,4 @@
-// Copyright (c) 2026 NewHorizon Kernel Project
+// Copyright (c) 2026 Horizon Kernel Project
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -52,7 +52,7 @@ pub const KERNEL_ENTRY: usize = 0x00200000;
 pub fn boot_uefi() -> BootInfo {
 	// Phase 1: Initialize runtime helpers for console I/O and panics.
 	uefi::helpers::init().unwrap();
-	uefi::println!("Welcome to NewHorizon Kernel!");
+	uefi::println!("Welcome to Horizon Kernel!");
 
 	let fr = get_frame_range().expect("fatal error: Frame Range initialization failed");
 
@@ -68,7 +68,7 @@ pub fn boot_uefi() -> BootInfo {
 	};
 
 	// Diagnostic log to UEFI console prior to shutting down boot services.
-	uefi::println!("=== NewHorizon BOOT INFO ===");
+	uefi::println!("=== Horizon BOOT INFO ===");
 	uefi::println!("Kernel File Size: {} bytes", boot_info.kernel_file_size);
 	uefi::println!("Kernel RAM Size:  {} bytes", boot_info.kernel_size_ram);
 

@@ -1,7 +1,12 @@
 OVMF_PATH ?= /usr/share/edk2/ovmf/OVMF_CODE.fd
-TARGET := x86_64-unknown-uefi
+TARGET-X86_64 := x86_64-unknown-uefi
+TARGET-ARMv6-M := thumbv6m-none-eabi
 
 .PHONY: build-ada build-x86_64 run-x86_64 clean
+
+# Run nix-shell befor setup or other prompts
+setup:
+	CC=gcc cargo install probe-rs-tools --force
 
 build-ada:
 	mkdir -p ada/time/obj ada/memory/obj
@@ -11,15 +16,21 @@ build-ada:
 	objcopy -I elf64-x86-64 -O pe-x86-64 ada/time/obj/time.o ada/time/obj/time.obj
 	objcopy -I elf64-x86-64 -O pe-x86-64 ada/memory/obj/memory.o ada/memory/obj/memory.obj
 
+build-ARMv6-M:
+	package
+
+run-ARMv6-M: build-ARMv6-M
+	a
+
 build-x86_64: build-ada
 	RUSTFLAGS="\
 		-C link-arg=$(CURDIR)/ada/time/obj/time.obj \
 		-C link-arg=$(CURDIR)/ada/memory/obj/memory.obj" \
-		cargo +nightly build --package NewHorizon-kernel --target $(TARGET)
+		cargo +nightly build --package Horizon-kernel --target $(TARGET)
 		
 	rm -rf target/esp
 	mkdir -p target/esp/EFI/BOOT
-	cp target/$(TARGET)/debug/NewHorizon-kernel.efi target/esp/EFI/BOOT/BOOTX64.EFI
+	cp target/$(TARGET)/debug/Horizon-kernel.efi target/esp/EFI/BOOT/BOOTX64.EFI
 
 run-x86_64: build-x86_64
 	qemu-system-x86_64 \
