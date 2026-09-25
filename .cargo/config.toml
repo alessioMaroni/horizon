@@ -42,9 +42,15 @@ rustflags = [
     "-C", "target-feature=-sse,-sse2,-avx,-avx2",
 ]
 
-[target.thumbv6m-none-eabi]
+[target.armv6-none-eabihf]
 rustflags = [
-    "-C", "link-arg=-Tlink.x",
+    "-C", "link-arg=-TARMv6-M.ld",
+    "-C", "link-arg=--nmagic",
+]
+
+[target.riscv32imac-unknown-none-elf]
+rustflags = [
+    "-C", "link-arg=-TRISC-V-linker.ld",
     "-C", "link-arg=--nmagic",
 ]
 

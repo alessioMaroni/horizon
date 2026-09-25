@@ -8,6 +8,10 @@ pkgs.mkShell {
     rustup
     qemu
     OVMF.fd
+    gcc-arm-embedded
+    openocd
+    usbutils
+    picotool    
   ];
 
   shellHook = ''

@@ -8,7 +8,8 @@
 
 #![cfg(not(test))]
 #[panic_handler]
-pub fn panic(info: &core::panic::PanicInfo) -> ! {
+pub fn panic(_info: &core::panic::PanicInfo) -> ! {
+    #[cfg(target_arch = "x86_64")]
 	crate::println!("[Kernel Panics] Panic: {:?}", info);
 	loop {}
 }

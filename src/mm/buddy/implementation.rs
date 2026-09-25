@@ -22,6 +22,7 @@
 //!      if the buddy is free, recursively merges the two blocks into a higher-order block.
 
 use crate::mm::buddy::{BuddyAllocator, FreeNode, MAX_ORDER, PAGE_SIZE};
+#[cfg(target_arch = "x86_64")]
 use crate::mm::buddy::{ada_compute_buddy_address, ada_search_free_block};
 
 use core::ptr::null_mut;
@@ -62,11 +63,13 @@ impl BuddyAllocator {
 	///
 	/// # Returns
 	/// Returns a `*mut u8` pointer to the allocated block, or `None` if memory is insufficient.
+    #[cfg(target_arch = "x86_64")]
 	pub fn alloc(&mut self, order: usize) -> Option<*mut u8> {
         let order_u64 = order as u64;
 
         // Call the Ada backend to find and split a free block
         let ptr = unsafe {
+            #[cfg(target_arch = "x86_64")]
             ada_search_free_block(self as *mut Self, order_u64)
         };
 
@@ -82,11 +85,13 @@ impl BuddyAllocator {
 	/// # Safety
 	/// - `ptr` must point to a block allocated by this allocator.
 	/// - `order` must match the exact order used during allocation.
+    #[cfg(target_arch = "x86_64")]
 	pub unsafe fn dealloc(&mut self, ptr: *mut u8, order: usize) {
         let mut current_ptr = ptr;
         let mut order_u64 = order as u64;
 
         // Delegates buddy calculation and recursive coalescing to Ada
+        #[cfg(target_arch = "x86_64")]
         unsafe {
             ada_compute_buddy_address(
                 self as *mut Self,
