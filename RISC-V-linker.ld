@@ -1,16 +1,15 @@
+ENTRY(_start)
+
 MEMORY
 {
-    FLASH (rx)  : ORIGIN = 0x10000000, LENGTH = 2M
-    RAM   (rwx) : ORIGIN = 0x20000000, LENGTH = 520K
+    FLASH (rx)  : ORIGIN = 0x80000000, LENGTH = 16M
+    RAM   (rwx) : ORIGIN = 0x81000000, LENGTH = 16M
 }
 
 SECTIONS
 {
     .text : {
-        KEEP(*(.picobin_block))
-        
         KEEP(*(.text._start))
-        
         *(.text .text.*)
     } > FLASH
 
