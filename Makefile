@@ -16,9 +16,10 @@ build-ada:
 	objcopy -I elf64-x86-64 -O pe-x86-64 ada/memory/obj/memory.o ada/memory/obj/memory.obj
 
 build:
+	mkdir -p .build
 	cargo build --target riscv32imac-unknown-none-elf --release
 	cargo objcopy --target riscv32imac-unknown-none-elf --release -- -O binary .build/kernel.bin
-	python3 scripts/uf2conv.py .build/kernel.bin -f 0xe48bff56 -o kernel.uf2
+	python3 scripts/uf2conv.py .build/kernel.bin -f 0xe48bff56 -o .build/kernel.uf2
 
 run: build
 	qemu-system-riscv32 -M virt -bios none -nographic -kernel .build/kernel.bin

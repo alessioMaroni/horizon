@@ -1,121 +1,43 @@
-// Copyright (c) 2026 Horizon Kernel Project
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! # Output Console Module
-//!
-//! This module provides the core console implementation for the kernel output subsystem,
-//! combining active font configurations and line tracking mechanisms.
-//!
-//! ```rust
-//! use crate::io::output::Console;
-//! ```
-
-pub mod fonts;
-pub mod print;
-pub mod helpers;
-
-use crate::io::output::fonts::Fonts;
-
 use core::fmt::{self, Write};
-use crate::sync::mutex::Mutex;
+use crate::arch::serial::UART_ADDR;
 
-/// Represents the system output console, tracking active typography, current cursor position,
-/// and line tracking metrics.
-pub struct Console {
-	/// Fonts struct to output
-	pub font: Fonts,
+#[derive(Copy, Clone)]
+pub struct Console;
 
-    /// Background color (unsigned 32-bit)
-    pub background: u32,
+impl Console {
+    #[inline(always)]
+    pub fn write_byte(&self, byte: u8) {
+        let uart = UART_ADDR as *mut u8;
+        unsafe {
+            uart.write_volatile(byte);
+        }
+    }
 
-	/// Tracks the absolute line number or total tracked lines in the console view.
-	pub line_number: usize,
+    #[inline]
+    pub fn write_char(&self, c: char) {
+        let mut buf = [0u8; 4];
+        for &byte in c.encode_utf8(&mut buf).as_bytes() {
+            self.write_byte(byte);
+        }
+    }
 
-	/// pos x
-	pub pos_x: usize,
+    pub fn write_str(&self, str: &str) {
+        for byte in str.bytes() {
+            self.write_byte(byte);
+        }
+    }
 
-	/// pos y
-	pub pos_y: usize,
+    pub fn write_fmt(&self, args: fmt::Arguments) {
+        let mut console = *self;
+        let _ = Write::write_fmt(&mut console, args);
+    }
 }
 
-/// Global thread-safe static instance of the kernel output console.
-///
-/// Protected by a `Mutex` to allow safe interior mutability and synchronized
-/// access across different execution contexts (e.g., core logic and interrupts).
-/// It is initially set to `None` and populated during early kernel initialization.
-pub static WRITER: Mutex<Option<Console>> = Mutex::new(None);
-
-/// Implementation of the core `core::fmt::Write` trait for the `Console` struct.
-///
-/// This trait integration allows the custom `Console` to bridge with Rust's
-/// standard formatting machinery (`core::fmt`), enabling formatted strings
-/// to be seamlessly written via standard formatting hooks.
 impl Write for Console {
-	/// Writes a string slice directly into the console buffer.
-	///
-	/// # Arguments
-	///
-	/// * `s` - A string slice (`&str`) containing the text to be rendered.
-	///
-	/// # Returns
-	///
-	/// Returns `fmt::Result` indicating success (`Ok(())`) upon completion.
-	fn write_str(&mut self, s: &str) -> fmt::Result {
-		self.print_str(s);
-		Ok(())
-	}
+    fn write_str(&mut self, str: &str) -> fmt::Result {
+        Console::write_str(self, str);
+        Ok(())
+    }
 }
 
-/// Internal helper function invoked by the `print!` and `println!` macros.
-///
-/// This function locks the global `WRITER` mutex, checks if the console has been
-/// successfully initialized, and writes the formatted argument sequence into it.
-///
-/// # Arguments
-///
-/// * `args` - A `fmt::Arguments` structure containing the parsed and compiled formatting data.
-#[doc(hidden)]
-pub fn _print(args: fmt::Arguments) {
-	if let Some(console) = WRITER.lock().as_mut() {
-		console.write_fmt(args).unwrap();
-	}
-}
-
-/// Prints formatted text to the kernel console output without a trailing newline.
-///
-/// This macro wraps around `format_args!` and forwards the payload to the internal
-/// `_print` routine. It is exported globally across the crate scope.
-///
-/// # Example
-///
-/// ```rust
-/// print!("Initializing subsystem: {}", "Memory");
-/// ```
-#[macro_export]
-macro_rules! print {
-    ($($arg:tt)*) => {
-        $crate::io::output::_print(format_args!($($arg)*))
-    };
-}
-
-/// Prints formatted text to the kernel console output followed by a newline character (`\n`).
-///
-/// Acts as the kernel-space counterpart to the standard library's `println!` macro.
-///
-/// # Example
-///
-/// ```rust
-/// println!("Kernel booted successfully at address {:#x}", entry_point);
-/// ```
-#[macro_export]
-macro_rules! println {
-    () => ($crate::print!("\n"));
-    ($($arg:tt)*) => {
-        $crate::print!("{}\n", format_args!($($arg)*))
-    };
-}
+pub static CONSOLE: Console = Console;
