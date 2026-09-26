@@ -4,6 +4,7 @@
 mod panic;
 
 pub mod arch;
+pub mod drivers;
 pub mod io;
 
 pub use crate::io::output::CONSOLE;
