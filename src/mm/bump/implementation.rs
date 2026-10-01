@@ -1,18 +1,11 @@
-// Copyright (c) 2026 Horizon Kernel Project
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! Implementation of the Bare Metal Bump Allocator
-//! We move a pointer along the heap, allocating sequentially.
+//! # implementation
+//!     Implementation of the Bump Allocator struct
 
 use core::alloc::Layout;
 use core::cell::UnsafeCell;
 use core::ptr::null_mut;
 
+use crate::info::Info;
 use crate::mm::bump::BumpAllocator;
 use crate::mm::bump::helpers::align_up;
 
@@ -42,9 +35,9 @@ impl BumpAllocator {
 	/// This function mutates the internal states via raw pointers using [`UnsafeCell`].
 	/// It must be called only once during early kernel initialization to avoid race
 	/// conditions or corrupting active allocations.
-	pub fn init(&self, boot_info: &crate::BootInfo) {
-		let start = boot_info.fr.heap_start as usize;
-		let end = boot_info.fr.heap_end as usize;
+	pub fn init(&self, info: &Info) {
+		let start = info.heap_start as usize;
+		let end = info.heap_end as usize;
 
 		// SAFETY: We obtain raw mutable pointers to write initial heap boundaries.
 		// This is safe provided `init` is called in a single-threaded context during boot.

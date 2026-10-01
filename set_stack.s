@@ -4,4 +4,4 @@
 _start:
     la sp, 0x82000000
     
-    j _main
+    j _setup

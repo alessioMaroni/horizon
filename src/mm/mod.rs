@@ -3,7 +3,8 @@
 //! Provides memory allocation primitives for the kernel, including a physical frame/buddy
 //! allocator for general kernel dynamics and a lightweight bump allocator for early boot stages.
 
-pub mod buddy;
+// TODO: Uncoment after fixing buddy allocator
+// pub mod buddy;
 
 /// Example Usage of the Early Bump Allocator:
 /// ```rust
@@ -17,7 +18,8 @@ pub mod buddy;
 /// ```
 pub mod bump;
 
-use crate::mm::buddy::LockedBuddyAllocator;
+// use crate::mm::buddy::LockedBuddyAllocator;
+use crate::mm::bump::BumpAllocator;
 
 /// Primary global kernel heap allocator.
 ///
@@ -25,4 +27,5 @@ use crate::mm::buddy::LockedBuddyAllocator;
 /// (`alloc::boxed::Box`, `alloc::vec::Vec`, `alloc::string::String`, etc.).
 /// Synchronized via interior locking mechanism to ensure thread safety across CPU cores.
 #[global_allocator]
-pub static ALLOCATOR: LockedBuddyAllocator = LockedBuddyAllocator::new();
+// pub static ALLOCATOR: LockedBuddyAllocator = LockedBuddyAllocator::new();
+pub static ALLOCATOR: BumpAllocator = BumpAllocator::new();

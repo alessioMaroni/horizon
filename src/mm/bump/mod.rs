@@ -1,12 +1,5 @@
-// Copyright (c) 2026 Horizon Kernel Project
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
-//! This file contain the Bump Allocator Struct Definitions
+//! # bump
+//!     Contain bum struct definition
 
 pub mod global_impl;
 pub mod helpers;
@@ -16,9 +9,6 @@ use core::cell::UnsafeCell;
 
 /// Bump Allocator Struct Definition
 /// A sequential linear allocator (Bump Allocator) designed for early kernel initialization.
-///
-/// Memory is allocated continuously by advancing a single pointer (`next`) forward.
-/// Individual allocations cannot be freed independently; the entire heap is reset at once.
 ///
 /// # Thread Safety
 ///
