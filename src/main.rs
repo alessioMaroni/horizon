@@ -16,8 +16,8 @@ pub use crate::io::output::CONSOLE;
 use crate::info::Info;
 use crate::mm::ALLOCATOR;
 
-core::arch::global_asm!(include_str!("../image_def.s"));
-core::arch::global_asm!(include_str!("../set_stack.s"));
+core::arch::global_asm!(include_str!("arch/init/image_def.s"));
+core::arch::global_asm!(include_str!("arch/init/set_stack.s"));
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _setup() -> ! {
