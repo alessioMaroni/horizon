@@ -18,7 +18,7 @@ repository = "https://github.com/alessioMaroni/Horizon"
 
 [package]
 name = "Horizon-kernel"
-version = "0.7.6"
+version = "1.0.0"
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
