@@ -1,3 +1,5 @@
+/* TODO: Document */
+
 ENTRY(_start)
 
 MEMORY
@@ -5,6 +7,7 @@ MEMORY
     FLASH   (rx)  : ORIGIN = 0x80000000, LENGTH = 2M
     RAM     (rwx) : ORIGIN = 0x80200000, LENGTH = 512K
     SCRATCH (rwx) : ORIGIN = 0x80280000, LENGTH = 8K
+    UART    (rw)  : ORIGIN = 0x10000000, LENGTH = 4K
 }
 
 SECTIONS
@@ -38,4 +41,9 @@ SECTIONS
     } > RAM
 
     _heap_end = ORIGIN(RAM) + LENGTH(RAM);
+
+    .uart (NOLOAD) : {
+        _uart_start = .;
+        *(.uart .uart.*)
+    } > UART
 }
