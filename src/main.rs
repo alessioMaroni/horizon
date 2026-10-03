@@ -36,5 +36,6 @@ pub fn _main() -> ! {
 
 	CONSOLE.write_fmt(format_args!("Try vec: {:?}\n", try_vec));
 
+	// panic!("[TEST] Kernel panic");
 	loop {}
 }
