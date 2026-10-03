@@ -7,10 +7,12 @@
 pub mod h_break;
 pub mod h_inst_alig;
 pub mod h_inst_featch_fault;
+pub mod h_illegal_inst;
 
 use crate::trap::h_break::handle_breakpoint;
 use crate::trap::h_inst_alig::handle_bad_inst_alig;
 use crate::trap::h_inst_featch_fault::handle_inst_access_fault;
+use crate::trap::h_illegal_inst::handle_illegal_instruction;
 
 use crate::CONSOLE;
 
@@ -57,6 +59,13 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
             0x1 => {
                 CONSOLE.write_str("[CRITICAL] Instruction Access Fault (Fetch Violation)\n");
                 handle_inst_access_fault(mepc);
+            }
+            // Illegal instruction: Encountered an instruction that was not a valid RISC-V opcode implemented by this
+            // processor, or attempted to access a nonexistent CSR, or attempted to execute a privileged instruction or
+            // access a privileged CSR without sufficient privilege.
+            0x2 => {
+                CONSOLE.write_str("[CRITICAL] Illegal Instruction Exception\n");
+                handle_illegal_instruction(mepc);
             }
             // Breakpoint: An ebreak or c.ebreak instruction was executed,
             // and no external debug host caught it.
