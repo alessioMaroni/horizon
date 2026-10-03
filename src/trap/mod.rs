@@ -9,12 +9,14 @@ pub mod h_inst_alig;
 pub mod h_inst_featch_fault;
 pub mod h_illegal_inst;
 pub mod h_load_alig;
+pub mod h_load_fault;
 
 use crate::trap::h_break::handle_breakpoint;
 use crate::trap::h_inst_alig::handle_bad_inst_alig;
 use crate::trap::h_inst_featch_fault::handle_inst_access_fault;
 use crate::trap::h_illegal_inst::handle_illegal_instruction;
 use crate::trap::h_load_alig::handle_load_misaligned;
+use crate::trap::h_load_fault::handle_load_access_fault;
 
 use crate::CONSOLE;
 
@@ -60,7 +62,7 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
             // or lacks PMP execute permission, or is forbidden by ACCESSCTRL, or
             // returned a fault from the memory device itself.
             0x1 => {
-                CONSOLE.write_str("[CRITICAL] Instruction Access Fault (Fetch Violation)\n");
+                CONSOLE.write_str("[CRITICAL!] Instruction Access Fault (Fetch Violation)\n");
                 handle_inst_access_fault(mepc);
             }
 
@@ -68,7 +70,7 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
             // processor, or attempted to access a nonexistent CSR, or attempted to execute a privileged instruction or
             // access a privileged CSR without sufficient privilege.
             0x2 => {
-                CONSOLE.write_str("[CRITICAL] Illegal Instruction Exception\n");
+                CONSOLE.write_str("[CRITICAL!] Illegal Instruction Exception\n");
                 handle_illegal_instruction(mepc);
             }
 
@@ -78,8 +80,15 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
 
             // Load alignment: Attempted to load from an address that was not a multiple of access size.
             0x4 => {
-                CONSOLE.write_str("[CRITICAL] Load Address Misaligned Exception\n");
+                CONSOLE.write_str("[CRITICAL!] Load Address Misaligned Exception\n");
                 handle_load_misaligned(mepc);
+            }
+
+            // Load fault: Attempted to load from an address that does not exist, or lacks PMP read permissions, or is
+            // forbidden by ACCESSCTRL, or returned a fault from a peripheral.
+            0x5 => {
+                CONSOLE.write_str("[CRITICAL] Load Access Fault (Read Violation)\n");
+                handle_load_access_fault(mepc);
             }
 
             // Unhandled exception
