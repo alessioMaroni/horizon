@@ -21,35 +21,21 @@ core::arch::global_asm!(include_str!("arch/init/image_def.s"));
 core::arch::global_asm!(include_str!("arch/init/set_stack.s"));
 core::arch::global_asm!(include_str!("arch/trap/trap_entry.s"));
 
-/// Kernel initialization and boot setup routine.
-/// 
-/// This function is the primary entry point called right after low-level boot 
-/// assembly. It configures the core architecture features, initializes the 
-/// memory allocator, and hands control over to the main kernel loop.
-/// 
-/// # Safety
-/// This function is marked `unsafe` and `extern "C"` because it relies on raw hardware 
-/// manipulation, interacts directly with assembly labels, and must never return (`-> !`).
 #[unsafe(no_mangle)]
 pub extern "C" fn _setup() -> ! {
-    // Configure the RISC-V trap handler vector base register (mtvec).
-    // This directs the CPU where to jump when an exception or interrupt occurs.
+    // Set the Trap Handler
     unsafe {
         core::arch::asm!(
-            "la t0, trap_entry",  // Load the address of the assembly trap entry stub into t0
-            "csrw mtvec, t0",     // Write t0 into the Machine Trap-Vector Base-Address Register
+            "la t0, trap_entry",
+            "csrw mtvec, t0",
             options(nostack, preserves_flags)
         );
     }
 
-    // Initialize hardware and platform information structure
-    let info: Info = Info::init();
-    
-    // Initialize the global heap/memory allocator using the discovered system info
-    ALLOCATOR.init(&info);
+	let info: Info = Info::init();
+	ALLOCATOR.init(&info);
 
-    // Transition execution to the main kernel logic (never returns)
-    _main();
+	_main();
 }
 
 #[unsafe(no_mangle)]
