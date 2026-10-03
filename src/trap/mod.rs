@@ -11,6 +11,7 @@ pub mod h_illegal_inst;
 pub mod h_load_alig;
 pub mod h_load_fault;
 pub mod h_store_amo_alig;
+pub mod h_store_amo_fault;
 
 use crate::trap::h_break::handle_breakpoint;
 use crate::trap::h_inst_alig::handle_bad_inst_alig;
@@ -19,6 +20,7 @@ use crate::trap::h_illegal_inst::handle_illegal_instruction;
 use crate::trap::h_load_alig::handle_load_misaligned;
 use crate::trap::h_load_fault::handle_load_access_fault;
 use crate::trap::h_store_amo_alig::handle_store_misaligned;
+use crate::trap::h_store_amo_fault::handle_store_access_fault;
 
 use crate::CONSOLE;
 
@@ -97,6 +99,14 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
             0x6 => {
                 CONSOLE.write_str("[CRITICAL!] Store Address Misaligned Exception\n");
                 handle_store_misaligned(mepc);
+            }
+
+            // Store/AMO fault: Attempted to write to an address that does not exist, or lacks PMP write permissions, or
+            // is forbidden by ACCESSCTRL, or returned a fault from a peripheral. Also raised when attempting an AMO
+            // on an address that does not support AHB5 exclusives.
+            0x7 => {
+                CONSOLE.write_str("[CRITICAL!] Store Access Fault (Write/AMO Violation)\n");
+                handle_store_access_fault(mepc);
             }
 
             // Unhandled exception
