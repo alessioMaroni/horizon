@@ -12,6 +12,7 @@ pub mod h_load_alig;
 pub mod h_load_fault;
 pub mod h_store_amo_alig;
 pub mod h_store_amo_fault;
+pub mod h_syscalls;
 
 use crate::trap::h_break::handle_breakpoint;
 use crate::trap::h_inst_alig::handle_bad_inst_alig;
@@ -21,6 +22,7 @@ use crate::trap::h_load_alig::handle_load_misaligned;
 use crate::trap::h_load_fault::handle_load_access_fault;
 use crate::trap::h_store_amo_alig::handle_store_misaligned;
 use crate::trap::h_store_amo_fault::handle_store_access_fault;
+use crate::trap::h_syscalls::{handle_syscall_mmode, handle_syscall_umode};
 
 use crate::CONSOLE;
 
@@ -108,6 +110,12 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
                 CONSOLE.write_str("[CRITICAL!] Store Access Fault (Write/AMO Violation)\n");
                 handle_store_access_fault(mepc);
             }
+
+            // An ecall instruction was executed in U-mode.
+            0x8 => handle_syscall_umode(mepc),
+
+            // An ecall instruction was executed in M-mode.
+            0xb => handle_syscall_mmode(mepc),
 
             // Unhandled exception
             _ => panic!("[PANIC!] Unhandled exception [ No.: {} at addr: 0x{:08x} ]", cause_code, mepc),
