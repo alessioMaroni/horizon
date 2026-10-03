@@ -8,11 +8,13 @@ pub mod h_break;
 pub mod h_inst_alig;
 pub mod h_inst_featch_fault;
 pub mod h_illegal_inst;
+pub mod h_load_alig;
 
 use crate::trap::h_break::handle_breakpoint;
 use crate::trap::h_inst_alig::handle_bad_inst_alig;
 use crate::trap::h_inst_featch_fault::handle_inst_access_fault;
 use crate::trap::h_illegal_inst::handle_illegal_instruction;
+use crate::trap::h_load_alig::handle_load_misaligned;
 
 use crate::CONSOLE;
 
@@ -53,6 +55,7 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
                 CONSOLE.write_str("[CRITICAL!] Instruction Address Misaligned!\n");
                 handle_bad_inst_alig(mepc);
             }
+
             // Instruction fetch fault: Attempted to fetch from an address that does not support instruction fetch,
             // or lacks PMP execute permission, or is forbidden by ACCESSCTRL, or
             // returned a fault from the memory device itself.
@@ -60,6 +63,7 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
                 CONSOLE.write_str("[CRITICAL] Instruction Access Fault (Fetch Violation)\n");
                 handle_inst_access_fault(mepc);
             }
+
             // Illegal instruction: Encountered an instruction that was not a valid RISC-V opcode implemented by this
             // processor, or attempted to access a nonexistent CSR, or attempted to execute a privileged instruction or
             // access a privileged CSR without sufficient privilege.
@@ -67,9 +71,16 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
                 CONSOLE.write_str("[CRITICAL] Illegal Instruction Exception\n");
                 handle_illegal_instruction(mepc);
             }
+
             // Breakpoint: An ebreak or c.ebreak instruction was executed,
             // and no external debug host caught it.
             0x3 => handle_breakpoint(mepc),
+
+            // Load alignment: Attempted to load from an address that was not a multiple of access size.
+            0x4 => {
+                CONSOLE.write_str("[CRITICAL] Load Address Misaligned Exception\n");
+                handle_load_misaligned(mepc);
+            }
 
             // Unhandled exception
             _ => panic!("[PANIC!] Unhandled exception [ No.: {} at addr: 0x{:08x} ]", cause_code, mepc),
