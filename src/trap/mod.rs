@@ -6,9 +6,11 @@
 
 pub mod h_break;
 pub mod h_inst_alig;
+pub mod h_inst_featch_fault;
 
 use crate::trap::h_break::handle_breakpoint;
 use crate::trap::h_inst_alig::handle_bad_inst_alig;
+use crate::trap::h_inst_featch_fault::handle_inst_access_fault;
 
 use crate::CONSOLE;
 
@@ -48,6 +50,13 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
             0x0 => {
                 CONSOLE.write_str("[CRITICAL!] Instruction Address Misaligned!\n");
                 handle_bad_inst_alig(mepc);
+            }
+            // Instruction fetch fault: Attempted to fetch from an address that does not support instruction fetch,
+            // or lacks PMP execute permission, or is forbidden by ACCESSCTRL, or
+            // returned a fault from the memory device itself.
+            0x1 => {
+                CONSOLE.write_str("[CRITICAL] Instruction Access Fault (Fetch Violation)\n");
+                handle_inst_access_fault(mepc);
             }
             // Breakpoint: An ebreak or c.ebreak instruction was executed,
             // and no external debug host caught it.
