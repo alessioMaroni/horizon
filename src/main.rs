@@ -47,16 +47,16 @@ pub fn _main() -> ! {
 
 	CONSOLE.write_fmt(format_args!("Try vec: {:?}\n", try_vec));
 
-	// panic!("[TEST] Kernel panic");
-
     // Trap Handler Test
     // ---------------------------------------
+    // Exeption 0x3 Breakpoint
     unsafe {
         core::arch::asm!("ebreak");
     }
     
     CONSOLE.write_str("[DEBUG] Hello, Kernel! After trap_handler return\n");
     // ---------------------------------------
+
 
 	loop {}
 }

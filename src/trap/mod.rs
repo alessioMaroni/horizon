@@ -5,7 +5,10 @@
 //! Rust trap dispatcher (`trap_handler`).
 
 pub mod h_break;
+pub mod h_inst_alig;
+
 use crate::trap::h_break::handle_breakpoint;
+use crate::trap::h_inst_alig::handle_bad_inst_alig;
 
 use crate::CONSOLE;
 
@@ -27,23 +30,31 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
 
     // Extracts the exception or interrupt code (e.g., 3)
     let cause_code = mcause & !(1 << 31);
-    write!(CONSOLE, "[DEBUG] is_interrupt [{}]\n", is_interrupt);
-    write!(CONSOLE, "[DEBUG] cause_code [{}]\n", cause_code);
+    CONSOLE.write_fmt(format_args!("[DEBUG] is_interrupt [{:?}]\n", is_interrupt));
+    CONSOLE.write_fmt(format_args!("[DEBUG] cause_code [{:?}]\n", cause_code));
 
     // Checks whether it's an interrupt or an exception
     if is_interrupt {
         match cause_code {
             // Unhandled interrupt
-            _ => panic!("Unhandled interrupt [ No.: {} ]", cause_code),
+            _ => panic!("[PANIC!] Unhandled interrupt [ No.: {} ]", cause_code),
         }
     } else {
         match cause_code {
+            // Instruction alignment: Does not occur on RP2350, because 16-bit compressed instructions are
+            // implemented, and it is impossible to jump to a byte-aligned addres.
+            //
+            // This can still happen if the core jumps to an odd address.
+            0x0 => {
+                CONSOLE.write_str("[CRITICAL!] Instruction Address Misaligned!\n");
+                handle_bad_inst_alig(mepc);
+            }
             // Breakpoint: An ebreak or c.ebreak instruction was executed,
             // and no external debug host caught it.
-            3 => handle_breakpoint(mepc),
+            0x3 => handle_breakpoint(mepc),
 
             // Unhandled exception
-            _ => panic!("Unhandled exception [ No.: {} at addr: 0x{:08x} ]", cause_code, mepc),
+            _ => panic!("[PANIC!] Unhandled exception [ No.: {} at addr: 0x{:08x} ]", cause_code, mepc),
         }
     }
 }

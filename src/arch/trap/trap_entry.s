@@ -17,7 +17,7 @@ trap_entry:
     sw x5,  16(sp)   // t0
     sw x6,  20(sp)   // t1
     sw x7,  24(sp)   // t2
-    sw x8,  28(sp)   // s0 / fp
+    sw x8,  28(sp)   // s0  fp
     sw x9,  32(sp)   // s1
     sw x10, 36(sp)   // a0
     sw x11, 40(sp)   // a1
