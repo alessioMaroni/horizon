@@ -10,6 +10,7 @@ pub mod h_inst_featch_fault;
 pub mod h_illegal_inst;
 pub mod h_load_alig;
 pub mod h_load_fault;
+pub mod h_store_amo_alig;
 
 use crate::trap::h_break::handle_breakpoint;
 use crate::trap::h_inst_alig::handle_bad_inst_alig;
@@ -17,6 +18,7 @@ use crate::trap::h_inst_featch_fault::handle_inst_access_fault;
 use crate::trap::h_illegal_inst::handle_illegal_instruction;
 use crate::trap::h_load_alig::handle_load_misaligned;
 use crate::trap::h_load_fault::handle_load_access_fault;
+use crate::trap::h_store_amo_alig::handle_store_misaligned;
 
 use crate::CONSOLE;
 
@@ -87,8 +89,14 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
             // Load fault: Attempted to load from an address that does not exist, or lacks PMP read permissions, or is
             // forbidden by ACCESSCTRL, or returned a fault from a peripheral.
             0x5 => {
-                CONSOLE.write_str("[CRITICAL] Load Access Fault (Read Violation)\n");
+                CONSOLE.write_str("[CRITICAL!] Load Access Fault (Read Violation)\n");
                 handle_load_access_fault(mepc);
+            }
+
+            // Store/AMO alignment: Attempted to write to an address that was not a multiple of access size.
+            0x6 => {
+                CONSOLE.write_str("[CRITICAL!] Store Address Misaligned Exception\n");
+                handle_store_misaligned(mepc);
             }
 
             // Unhandled exception
