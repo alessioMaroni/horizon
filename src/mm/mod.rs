@@ -2,10 +2,6 @@
 //!
 //! Provides memory allocation primitives for the kernel, including a physical frame/buddy
 //! allocator for general kernel dynamics and a lightweight bump allocator for early boot stages.
-
-// TODO: Uncoment after fixing buddy allocator
-// pub mod buddy;
-
 /// Example Usage of the Early Bump Allocator:
 /// ```rust
 /// // Direct manual allocation via BumpAllocator raw interface

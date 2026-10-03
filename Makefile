@@ -10,10 +10,8 @@ setup:
 build-ada:
 	mkdir -p ada/time/obj ada/memory/obj
 	gcc -c ada/time/src/time.adb -O2 -g0 -gnatp -mno-red-zone -fno-PIC -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-strict-aliasing -o ada/time/obj/time.o
-	gcc -c ada/memory/src/memory.adb -O2 -g0 -gnatp -mno-red-zone -fno-PIC -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-strict-aliasing -o ada/memory/obj/memory.o
 
 	objcopy -I elf64-x86-64 -O pe-x86-64 ada/time/obj/time.o ada/time/obj/time.obj
-	objcopy -I elf64-x86-64 -O pe-x86-64 ada/memory/obj/memory.o ada/memory/obj/memory.obj
 
 build:
 	mkdir -p .build
