@@ -1,6 +1,6 @@
 // TODO: Document
 
-pub use crate::io::output::CONSOLE;
+pub use crate::CONSOLE;
 
 #[cfg(not(test))]
 #[panic_handler]
