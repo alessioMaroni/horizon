@@ -5,6 +5,10 @@
 //! Rust trap dispatcher (`trap_handler`).
 
 pub mod exeptions;
+pub mod helpers;
+
+#[cfg(any(feature = "debug", feature = "tests"))]
+use crate::trap::helpers::*;
 
 use crate::trap::exeptions::h_break::handle_breakpoint;
 use crate::trap::exeptions::h_inst_alig::handle_bad_inst_alig;
@@ -18,6 +22,43 @@ use crate::trap::exeptions::h_syscalls::{handle_syscall_mmode, handle_syscall_um
 
 use crate::CONSOLE;
 
+// Trap frame
+// extracted from arch/trap/trap_entry.s
+#[repr(C)]
+pub struct TrapFrame {
+    pub ra: usize,
+    pub sp: usize,
+    pub gp: usize,
+    pub tp: usize,
+    pub t0: usize,
+    pub t1: usize,
+    pub t2: usize,
+    pub s0: usize,
+    pub s1: usize,
+    pub a0: usize,
+    pub a1: usize,
+    pub a2: usize,
+    pub a3: usize,
+    pub a4: usize,
+    pub a5: usize,
+    pub a6: usize,
+    pub a7: usize,
+    pub s2: usize,
+    pub s3: usize,
+    pub s4: usize,
+    pub s5: usize,
+    pub s6: usize,
+    pub s7: usize,
+    pub s8: usize,
+    pub s9: usize,
+    pub s10: usize,
+    pub s11: usize,
+    pub t3: usize,
+    pub t4: usize,
+    pub t5: usize,
+    pub t6: usize,
+}
+
 /// Main high-level trap handler called directly from the assembly stub.
 ///
 /// # Arguments
@@ -26,7 +67,13 @@ use crate::CONSOLE;
 /// * `mepc`   - The program counter of the instruction that caused or was interrupted by the trap.
 /// * `_frame` - A raw pointer to the saved register frame (trap frame) on the stack.
 #[unsafe(no_mangle)]
-pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
+pub extern "C" fn trap_handler(
+    mcause: usize,
+    mepc: usize, 
+    #[allow(unused_variables)]
+    frame_ptr: *mut TrapFrame
+    ){
+    #[cfg(any(feature = "debug", feature = "tests"))]
     CONSOLE.write_str("[DEBUG] Trap Handler!\n");
 
     // Determines whether the trap is an interrupt or an exception:
@@ -36,8 +83,14 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
 
     // Extracts the exception or interrupt code (e.g., 3)
     let cause_code = mcause & !(1 << 31);
-    CONSOLE.write_fmt(format_args!("[DEBUG] is_interrupt [{:?}]\n", is_interrupt));
-    CONSOLE.write_fmt(format_args!("[DEBUG] cause_code [{:?}]\n", cause_code));
+
+    #[cfg(any(feature = "debug", feature = "tests"))]
+    print_debug(
+        mepc,
+        frame_ptr,
+        is_interrupt,
+        cause_code
+    );
 
     // Checks whether it's an interrupt or an exception
     if is_interrupt {

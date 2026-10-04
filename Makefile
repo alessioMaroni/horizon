@@ -19,5 +19,25 @@ build:
 	cargo objcopy --target riscv32imac-unknown-none-elf --release -- -O binary .build/kernel.bin
 	python3 scripts/uf2conv.py .build/kernel.bin -f 0xe48bff56 -o .build/kernel.uf2
 
+debug:
+	mkdir -p .build
+	cargo build --target riscv32imac-unknown-none-elf
+	cargo objcopy --target riscv32imac-unknown-none-elf -- -O binary .build/kernel-debug.bin
+
+test:
+	mkdir -p .build
+	cargo build --target riscv32imac-unknown-none-elf --release --features tests
+	cargo objcopy --target riscv32imac-unknown-none-elf --release --features tests --bin RSC-V-kernel -- -O binary .build/kernel-test.bin
+
 run: build
 	qemu-system-riscv32 -M virt -bios none -nographic -kernel .build/kernel.bin
+
+run-debug: debug
+	qemu-system-riscv32 -M virt -bios none -nographic -kernel .build/kernel-debug.bin
+
+run-test: test
+	qemu-system-riscv32 -M virt -bios none -nographic -kernel .build/kernel-test.bin
+
+clean:
+	cargo clean
+	rm -rf .build ada/time/obj ada/memory/obj
