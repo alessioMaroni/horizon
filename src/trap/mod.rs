@@ -42,6 +42,7 @@ pub extern "C" fn trap_handler(mcause: usize, mepc: usize, _frame: *mut usize) {
     // Checks whether it's an interrupt or an exception
     if is_interrupt {
         match cause_code {
+            // TODO: Finish the interrupt handler
             // Unhandled interrupt
             _ => panic!("[PANIC!] Unhandled interrupt [ No.: {} ]", cause_code),
         }
