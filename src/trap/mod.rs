@@ -4,25 +4,17 @@
 //! It defines the external assembly entry point (`trap_entry`) and the main high-level
 //! Rust trap dispatcher (`trap_handler`).
 
-pub mod h_break;
-pub mod h_inst_alig;
-pub mod h_inst_featch_fault;
-pub mod h_illegal_inst;
-pub mod h_load_alig;
-pub mod h_load_fault;
-pub mod h_store_amo_alig;
-pub mod h_store_amo_fault;
-pub mod h_syscalls;
+pub mod exeptions;
 
-use crate::trap::h_break::handle_breakpoint;
-use crate::trap::h_inst_alig::handle_bad_inst_alig;
-use crate::trap::h_inst_featch_fault::handle_inst_access_fault;
-use crate::trap::h_illegal_inst::handle_illegal_instruction;
-use crate::trap::h_load_alig::handle_load_misaligned;
-use crate::trap::h_load_fault::handle_load_access_fault;
-use crate::trap::h_store_amo_alig::handle_store_misaligned;
-use crate::trap::h_store_amo_fault::handle_store_access_fault;
-use crate::trap::h_syscalls::{handle_syscall_mmode, handle_syscall_umode};
+use crate::trap::exeptions::h_break::handle_breakpoint;
+use crate::trap::exeptions::h_inst_alig::handle_bad_inst_alig;
+use crate::trap::exeptions::h_inst_featch_fault::handle_inst_access_fault;
+use crate::trap::exeptions::h_illegal_inst::handle_illegal_instruction;
+use crate::trap::exeptions::h_load_alig::handle_load_misaligned;
+use crate::trap::exeptions::h_load_fault::handle_load_access_fault;
+use crate::trap::exeptions::h_store_amo_alig::handle_store_misaligned;
+use crate::trap::exeptions::h_store_amo_fault::handle_store_access_fault;
+use crate::trap::exeptions::h_syscalls::{handle_syscall_mmode, handle_syscall_umode};
 
 use crate::CONSOLE;
 
