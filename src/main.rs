@@ -44,12 +44,6 @@ pub extern "C" fn _setup() -> ! {
 pub fn _main() -> ! {
     CONSOLE.write_str("Message 1\n");
 
-    #[cfg(feature = "tests")]
-    {
-        trigger_0x8_syscall_umode();
-        trigger_0xb_syscall_mmode();
-    }
-
     CONSOLE.write_str("Message 2\n");
 
     loop {}
