@@ -1,90 +1,44 @@
-// This file saves the general-purpose registers and invokes `trap_handler` function.
+// File: trap_entry.s
+// Architecture: RISC-V (RV32I / RV32IMAC - Machine Mode)
+// Description: Main trap entry point for exception and interrupt handling.
+//              Saves full CPU context, prepares parameters for the high-level
+//              handler (`trap_handler`), restores context, and returns from trap.
+
+// Export `trap_entry` as a global symbol so it can be referenced in Rust/C
+// (e.g., when setting the Machine Trap-Vector Base-Address Register `mtvec`).
 .global trap_entry
 
-// Aligning at 4 bytes (the pointer written to mtvec must be word-aligned)
+// Ensure 4-byte (word) alignment.
+// RISC-V requires the base address in `mtvec` to be at least 4-byte aligned.
 .align 4
 
 trap_entry:
-    // Making space on the stack to store all the 31 registers
-    // 31 (n. regs) * 4 (size) = 124, rounded to 128 for 16-byte stack alignment
-    addi sp, sp, -128
+    // Expand macro to allocate 128 bytes on the stack and store all integer
+    // registers (x1 - x31) into the newly created stack frame.
+    SAVE_REGS
 
-    // Saving all the 31 regs on the stack (x1 to x31, excluding x0)
-    sw x1,   0(sp)   // ra  (Return Address)
-    sw x2,   4(sp)   // sp  (Original Stack Pointer)
-    sw x3,   8(sp)   // gp
-    sw x4,  12(sp)   // tp
-    sw x5,  16(sp)   // t0
-    sw x6,  20(sp)   // t1
-    sw x7,  24(sp)   // t2
-    sw x8,  28(sp)   // s0  fp
-    sw x9,  32(sp)   // s1
-    sw x10, 36(sp)   // a0
-    sw x11, 40(sp)   // a1
-    sw x12, 44(sp)   // a2
-    sw x13, 48(sp)   // a3
-    sw x14, 52(sp)   // a4
-    sw x15, 56(sp)   // a5
-    sw x16, 60(sp)   // a6
-    sw x17, 64(sp)   // a7
-    sw x18, 68(sp)   // s2
-    sw x19, 72(sp)   // s3
-    sw x20, 76(sp)   // s4
-    sw x21, 80(sp)   // s5
-    sw x22, 84(sp)   // s6
-    sw x23, 88(sp)   // s7
-    sw x24, 92(sp)   // s8
-    sw x25, 96(sp)   // s9
-    sw x26, 100(sp)  // s10
-    sw x27, 104(sp)  // s11
-    sw x28, 108(sp)  // t3
-    sw x29, 112(sp)  // t4
-    sw x30, 116(sp)  // t5
-    sw x31, 120(sp)  // t6
-    // Last 4 bytes (124-128) are used as padding for stack alignment
-
-    // Preparing function params
+    // Argument 1 (a0): Read `mcause` CSR (Machine Cause Register)
+    // Contains the trap reason (interrupt vs. exception and exact cause code).
     csrr a0, mcause
+
+    // Argument 2 (a1): Read `mepc` CSR (Machine Exception Program Counter)
+    // Contains the virtual/physical memory address of the trapped instruction.
     csrr a1, mepc
+
+    // Argument 3 (a2): Pass current Stack Pointer (`sp`)
+    // Points to the base of the saved register structure (`TrapFrame`) on stack.
     mv   a2, sp
 
-    // Calling Rust function defined in src/trap.rs
+    // Invoke the higher-level trap dispatcher defined in Rust/C:
+    // `fn trap_handler(mcause: usize, mepc: usize, frame: *mut TrapFrame)`
     call trap_handler
 
-    // Exiting phase: Restoring all 31 registers with EXACT matching offsets
-    lw x1,   0(sp)
-    lw x2,   4(sp)
-    lw x3,   8(sp)
-    lw x4,  12(sp)
-    lw x5,  16(sp)
-    lw x6,  20(sp)
-    lw x7,  24(sp)
-    lw x8,  28(sp)
-    lw x9,  32(sp)
-    lw x10, 36(sp)
-    lw x11, 40(sp)
-    lw x12, 44(sp)
-    lw x13, 48(sp)
-    lw x14, 52(sp)
-    lw x15, 56(sp)
-    lw x16, 60(sp)
-    lw x17, 64(sp)
-    lw x18, 68(sp)
-    lw x19, 72(sp)
-    lw x20, 76(sp)
-    lw x21, 80(sp)
-    lw x22, 84(sp)
-    lw x23, 88(sp)
-    lw x24, 92(sp)
-    lw x25, 96(sp)
-    lw x26, 100(sp)
-    lw x27, 104(sp)
-    lw x28, 108(sp)
-    lw x29, 112(sp)
-    lw x30, 116(sp)
-    lw x31, 120(sp)
+    // Expand macro to reload all registers (x1 - x31) from the stack frame
+    // and reclaim the 128 bytes of allocated stack space.
+    RESTORE_REGS
 
-    // Reset stack pointer
-    addi sp, sp, 128
-
+    // Return from Machine-mode trap handler:
+    // - Sets Program Counter (PC) to the address currently in `mepc`.
+    // - Restores interrupt enable state (copies MPIE to MIE in `mstatus`).
+    // - Restores previous privilege level (MPP in `mstatus`).
     mret

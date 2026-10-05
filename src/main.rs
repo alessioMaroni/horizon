@@ -19,9 +19,18 @@ use crate::info::Info;
 pub use crate::io::output::CONSOLE;
 use crate::mm::ALLOCATOR;
 
-core::arch::global_asm!(include_str!("arch/init/image_def.s"));
-core::arch::global_asm!(include_str!("arch/init/set_stack.s"));
-core::arch::global_asm!(include_str!("arch/trap/trap_entry.s"));
+use core::arch::global_asm;
+
+global_asm!(include_str!("arch/init/image_def.s"));
+global_asm!(include_str!("arch/init/set_stack.s"));
+
+global_asm!(concat!(
+    include_str!("arch/regs/save_regs.s"),
+    "\n",
+    include_str!("arch/regs/restore_regs.s"),
+    "\n",
+    include_str!("arch/trap/trap_entry.s")
+));
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _setup() -> ! {
@@ -43,6 +52,11 @@ pub extern "C" fn _setup() -> ! {
 #[unsafe(no_mangle)]
 pub fn _main() -> ! {
     CONSOLE.write_str("Message 1\n");
+
+    #[cfg(feature = "tests")]
+    {
+        trigger_0x3_breakpoint();
+    }
 
     CONSOLE.write_str("Message 2\n");
 
