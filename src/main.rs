@@ -53,10 +53,9 @@ pub extern "C" fn _setup() -> ! {
 pub fn _main() -> ! {
     CONSOLE.write_str("Message 1\n");
 
-    #[cfg(feature = "tests")]
-    {
-        trigger_0x3_breakpoint();
-    }
+    unsafe {
+        core::arch::asm!(".4byte 0x00000000");
+    }    
 
     CONSOLE.write_str("Message 2\n");
 
