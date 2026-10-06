@@ -18,6 +18,7 @@ pub mod mm;
 use crate::info::Info;
 pub use crate::io::output::CONSOLE;
 use crate::mm::ALLOCATOR;
+use crate::arch::regs::stack::*;
 
 use core::arch::global_asm;
 
@@ -34,6 +35,13 @@ global_asm!(concat!(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _setup() -> ! {
+    unsafe {
+        let guard_base = &_stack_guard_start as *const u8 as usize;
+        let guard_end = &_stack_guard_end as *const u8 as usize;
+        let guard_size = guard_end - guard_base;
+
+        setup_pmp_stack_guard(guard_base, guard_size);
+    }
     // Set the Trap Handler
     unsafe {
         core::arch::asm!(

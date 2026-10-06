@@ -46,4 +46,18 @@ SECTIONS
         _uart_start = .;
         *(.uart .uart.*)
     } > UART
+
+    .stack_guard (NOLOAD) : ALIGN(512)
+    {
+        _stack_guard_start = .;
+        . += 512;
+        _stack_guard_end = .;
+    }
+
+    .stack (NOLOAD) : ALIGN(16)
+    {
+        _stack_start = .;
+        . += 8192;
+        _stack_end = .;
+    }
 }
