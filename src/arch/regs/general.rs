@@ -43,22 +43,24 @@ pub struct TrapFrame {
 
 impl TrapFrame {
     pub fn dump(&self, mcause: Option<usize>, mepc: Option<usize>) {
-        CONSOLE.write_fmt(format_args!("REGISTER DUMP:\n"));
+        let _ = CONSOLE.write_fmt(format_args!("\x1b[1;33mREGISTER DUMP:\x1b[0m\n"));
         
         if let (Some(cause), Some(epc)) = (mcause, mepc) {
-            CONSOLE.write_fmt(format_args!("mcause: {:#010x} | mepc: {:#010x}\n", cause, epc));
+            let _ = CONSOLE.write_fmt(format_args!(
+                "\x1b[1;33mmcause:\x1b[0m {:#010x} | \x1b[1;33mmepc:\x1b[0m {:#010x}\n",
+                cause, epc
+            ));
         }
 
-        CONSOLE.write_fmt(format_args!(
-            "ra : {:#010x}   sp : {:#010x}   gp : {:#010x}   tp : {:#010x}\n\
-             t0 : {:#010x}   t1 : {:#010x}   t2 : {:#010x}   s0 : {:#010x}\n\
-             s1 : {:#010x}   a0 : {:#010x}   a1 : {:#010x}   a2 : {:#010x}\n\
-             a3 : {:#010x}   a4 : {:#010x}   a5 : {:#010x}   a6 : {:#010x}\n\
-             a7 : {:#010x}   s2 : {:#010x}   s3 : {:#010x}   s4 : {:#010x}\n\
-             s5 : {:#010x}   s6 : {:#010x}   s7 : {:#010x}   s8 : {:#010x}\n\
-             s9 : {:#010x}   s10: {:#010x}   s11: {:#010x}   t3 : {:#010x}\n\
-             t4 : {:#010x}   t5 : {:#010x}   t6 : {:#010x}\n\n\
-             ",
+        let _ = CONSOLE.write_fmt(format_args!(
+            "\x1b[1;33mra\x1b[0m : {:#010x}   \x1b[1;33msp\x1b[0m : {:#010x}   \x1b[1;33mgp\x1b[0m : {:#010x}   \x1b[1;33mtp\x1b[0m : {:#010x}\n\
+             \x1b[1;33mt0\x1b[0m : {:#010x}   \x1b[1;33mt1\x1b[0m : {:#010x}   \x1b[1;33mt2\x1b[0m : {:#010x}   \x1b[1;33ms0\x1b[0m : {:#010x}\n\
+             \x1b[1;33ms1\x1b[0m : {:#010x}   \x1b[1;33ma0\x1b[0m : {:#010x}   \x1b[1;33ma1\x1b[0m : {:#010x}   \x1b[1;33ma2\x1b[0m : {:#010x}\n\
+             \x1b[1;33ma3\x1b[0m : {:#010x}   \x1b[1;33ma4\x1b[0m : {:#010x}   \x1b[1;33ma5\x1b[0m : {:#010x}   \x1b[1;33ma6\x1b[0m : {:#010x}\n\
+             \x1b[1;33ma7\x1b[0m : {:#010x}   \x1b[1;33ms2\x1b[0m : {:#010x}   \x1b[1;33ms3\x1b[0m : {:#010x}   \x1b[1;33ms4\x1b[0m : {:#010x}\n\
+             \x1b[1;33ms5\x1b[0m : {:#010x}   \x1b[1;33ms6\x1b[0m : {:#010x}   \x1b[1;33ms7\x1b[0m : {:#010x}   \x1b[1;33ms8\x1b[0m : {:#010x}\n\
+             \x1b[1;33ms9\x1b[0m : {:#010x}   \x1b[1;33ms10\x1b[0m: {:#010x}   \x1b[1;33ms11\x1b[0m: {:#010x}   \x1b[1;33mt3\x1b[0m : {:#010x}\n\
+             \x1b[1;33mt4\x1b[0m : {:#010x}   \x1b[1;33mt5\x1b[0m : {:#010x}   \x1b[1;33mt6\x1b[0m : {:#010x}\n\n",
 
             self.ra, self.sp, self.gp, self.tp,
             self.t0, self.t1, self.t2, self.s0,

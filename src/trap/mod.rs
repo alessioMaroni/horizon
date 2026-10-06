@@ -35,7 +35,10 @@ pub extern "C" fn trap_handler(
         mepc: usize, 
         #[allow(unused_variables)]
         frame_ptr: *mut TrapFrame
-    ){
+    )
+{
+
+
     // Determines whether the trap is an interrupt or an exception:
     // * `true`  - It's an interrupt
     // * `false` - It's an exception
@@ -43,6 +46,13 @@ pub extern "C" fn trap_handler(
 
     // Extracts the exception or interrupt code (e.g., 3)
     let cause_code = mcause & !(1 << 31);
+
+    CONSOLE.write_fmt(format_args!(
+        "\n\x1b[1;33m[TRAP TRIGGERED]\x1b[0m Type: \x1b[1;36m{}\x1b[0m | Code: \x1b[1;33m{:#010x}\x1b[0m | mepc: \x1b[1;33m{:#010x}\x1b[0m\n",
+        if is_interrupt { "INTERRUPT" } else { "EXCEPTION" },
+        cause_code,
+        mepc
+    ));
 
 
     let mtval = read_mtval();
@@ -54,7 +64,7 @@ pub extern "C" fn trap_handler(
          Cause Code   : {:#010x} ({})\n\
          Program Ctr  : {:#010x} (mepc)\n\
          Target Value : {:#010x} (mtval: BadAddr or Opcode)\n\
-         CPU Status   : {:#010x} (mstatus)\n\
+         CPU Status   : {:#010x} (mstatus)\n\n\
          ",
         if is_interrupt { "INTERRUPT" } else { "EXCEPTION" },
         cause_code,
@@ -87,7 +97,7 @@ pub extern "C" fn trap_handler(
             //
             // This can still happen if the core jumps to an odd address.
             0x0 => {
-                CONSOLE.write_str("[CRITICAL!] Instruction Address Misaligned!\n\n");
+                CONSOLE.write_str("\x1b[1;31m[CRITICAL!] Instruction Address Misaligned!\x1b[0m\n\n");
                 handle_bad_inst_alig(mepc);
             }
 
@@ -95,7 +105,7 @@ pub extern "C" fn trap_handler(
             // or lacks PMP execute permission, or is forbidden by ACCESSCTRL, or
             // returned a fault from the memory device itself.
             0x1 => {
-                CONSOLE.write_str("[CRITICAL!] Instruction Access Fault (Fetch Violation)!\n\n");
+                CONSOLE.write_str("\x1b[1;31m[CRITICAL!] Instruction Access Fault (Fetch Violation)!\x1b[0m\n\n");
                 handle_inst_access_fault(mepc);
             }
 
@@ -103,7 +113,7 @@ pub extern "C" fn trap_handler(
             // processor, or attempted to access a nonexistent CSR, or attempted to execute a privileged instruction or
             // access a privileged CSR without sufficient privilege.
             0x2 => {
-                CONSOLE.write_str("[CRITICAL!] Illegal Instruction Exception!\n\n");
+                CONSOLE.write_str("\x1b[1;31m[CRITICAL!] Illegal Instruction Exception!\x1b[0m\n\n");
                 handle_illegal_instruction(mepc);
             }
 
@@ -113,20 +123,20 @@ pub extern "C" fn trap_handler(
 
             // Load alignment: Attempted to load from an address that was not a multiple of access size.
             0x4 => {
-                CONSOLE.write_str("[CRITICAL!] Load Address Misaligned Exception!\n\n");
+                CONSOLE.write_str("\x1b[1;31m[CRITICAL!] Load Address Misaligned Exception!\x1b[0m\n\n");
                 handle_load_misaligned(mepc);
             }
 
             // Load fault: Attempted to load from an address that does not exist, or lacks PMP read permissions, or is
             // forbidden by ACCESSCTRL, or returned a fault from a peripheral.
             0x5 => {
-                CONSOLE.write_str("[CRITICAL!] Load Access Fault (Read Violation)!\n\n");
+                CONSOLE.write_str("\x1b[1;31m[CRITICAL!] Load Access Fault (Read Violation)!\x1b[0m\n\n");
                 handle_load_access_fault(mepc);
             }
 
             // Store/AMO alignment: Attempted to write to an address that was not a multiple of access size.
             0x6 => {
-                CONSOLE.write_str("[CRITICAL!] Store Address Misaligned Exception!\n\n");
+                CONSOLE.write_str("\x1b[1;31m[CRITICAL!] Store Address Misaligned Exception!\x1b[0m\n\n");
                 handle_store_misaligned(mepc);
             }
 
@@ -134,7 +144,7 @@ pub extern "C" fn trap_handler(
             // is forbidden by ACCESSCTRL, or returned a fault from a peripheral. Also raised when attempting an AMO
             // on an address that does not support AHB5 exclusives.
             0x7 => {
-                CONSOLE.write_str("[CRITICAL!] Store Access Fault (Write/AMO Violation)!\n\n");
+                CONSOLE.write_str("\x1b[1;31m[CRITICAL!] Store Access Fault (Write/AMO Violation)!\x1b[0m\n\n");
                 handle_store_access_fault(mepc);
             }
 
@@ -145,7 +155,11 @@ pub extern "C" fn trap_handler(
             0xb => handle_syscall_mmode(mepc),
 
             // Unhandled exception
-            _ => panic!("[PANIC!] Unhandled exception [ No.: {} at addr: 0x{:08x} ]!", cause_code, mepc),
+           _ => panic!(
+                "\x1b[1;31m[PANIC!] Unhandled exception\x1b[0m [ No.: \x1b[1;33m{}\x1b[0m at addr: \x1b[1;33m{:#010x}\x1b[0m ]!",
+                cause_code, 
+                mepc
+            ),
         }
     }
 }

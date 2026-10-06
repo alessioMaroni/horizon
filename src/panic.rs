@@ -25,6 +25,10 @@ pub use crate::CONSOLE;
 #[cfg(not(test))]
 #[panic_handler]
 pub fn panic(info: &core::panic::PanicInfo) -> ! {
-    CONSOLE.write_fmt(format_args!("[PANIC!] Kernel panic! \n{}\n", info));
+    CONSOLE.write_fmt(format_args!(
+        "\x1b[1;31m[PANIC!] Kernel panic!\x1b[0m\n\x1b[31m{}\x1b[0m\n",
+        info
+    ));
+
     loop {}
 }
