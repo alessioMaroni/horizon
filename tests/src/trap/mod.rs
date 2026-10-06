@@ -9,6 +9,10 @@
 //! trap condition. These triggers are used to validate the correct behavior, register 
 //! state saving, and recovering mechanisms of the kernel's trap handling routines.
 
+unsafe extern "C" {
+    static _stack_guard_start: u8;
+}
+
 /// Triggers Exception `0x0`: **Instruction Address Misaligned**.
 ///
 /// Forces an unaligned instruction fetch by executing a jump (`jr`) to an unaligned 
@@ -106,6 +110,7 @@ pub fn trigger_0x6_store_misaligned() {
 /// Triggers Exception `0x7`: **Store/AMO Access Fault**.
 ///
 /// Attempts to store a 32-bit word (`sw`) to a NULL/unmapped address (`0x0000_0000`).
+/*
 #[inline(always)]
 pub fn trigger_0x7_store_access_fault() {
     unsafe {
@@ -113,6 +118,22 @@ pub fn trigger_0x7_store_access_fault() {
             "li t0, 0x00000000",
             "sw x0, 0(t0)",
             out("t0") _
+        );
+    }
+}
+*/
+
+/// Triggers Exception `0x7`: **Store/AMO Access Fault**.
+///
+/// Attempts to store a 32-bit word (`sw`) directly into the hardware-locked 
+/// PMP Guard Page (`_stack_guard_start`), violating the `pmp0cfg` rule (`0x98`: R=0, W=0, X=0, L=1).
+#[inline(always)]
+pub fn trigger_0x7_store_access_fault() {
+    unsafe {
+        let guard_ptr = core::ptr::addr_of!(_stack_guard_start) as *mut u32;
+        core::arch::asm!(
+            "sw x0, 0({addr})",
+            addr = in(reg) guard_ptr,
         );
     }
 }

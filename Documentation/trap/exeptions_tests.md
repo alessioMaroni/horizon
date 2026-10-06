@@ -1,6 +1,6 @@
 # Trap Handler Module Test Suite
 
-`Docs` | `Trap Handler` | `Exceptions` | `Interrupts`
+`Tests` | `Trap Handler` | `Exceptions` | `Interrupts`
 
 This document details the test procedures designed to validate the RISC-V kernel's [**Trap Handler**](./Trap_handler.md). 
 
@@ -563,14 +563,15 @@ This exception is tested using the following assembly trigger:
 ```rust
 /// Triggers Exception `0x7`: **Store/AMO Access Fault**.
 ///
-/// Attempts to store a 32-bit word (`sw`) to a NULL/unmapped address (`0x0000_0000`).
+/// Attempts to store a 32-bit word (`sw`) directly into the hardware-locked 
+/// PMP Guard Page (`_stack_guard_start`), violating the `pmp0cfg` rule (`0x98`: R=0, W=0, X=0, L=1).
 #[inline(always)]
 pub fn trigger_0x7_store_access_fault() {
     unsafe {
+        let guard_ptr = core::ptr::addr_of!(_stack_guard_start) as *mut u32;
         core::arch::asm!(
-            "li t0, 0x00000000",
-            "sw x0, 0(t0)",
-            out("t0") _
+            "sw x0, 0({addr})",
+            addr = in(reg) guard_ptr,
         );
     }
 }
@@ -585,9 +586,7 @@ pub fn _main() -> ! {
     CONSOLE.write_str("Message 1\n");
 
     #[cfg(feature = "tests")]
-    {
-        trigger_0x7_store_access_fault();
-    }
+    trigger_0x7_store_access_fault();  
 
     CONSOLE.write_str("Message 2\n");
 
@@ -608,31 +607,36 @@ Upon trapping, the system behavior must strictly adhere to the following executi
 #### **1.9.4** Test Result
 ```
 Message 1
-[DEBUG] Trap Handler!
 
-==================== [ TRAP DIAGNOSTIC REPORT ] ====================
- Type         : EXCEPTION
- Cause Code   : 0x00000007 (Store/AMO Access Fault)
- Program Ctr  : 0x800003d2 (mepc)
- Target Value : 0x00000000 (mtval: BadAddr or Opcode)
- CPU Status   : 0x00001800 (mstatus)
- --- Saved Registers (TrapFrame) ---
- RA : 0x80000418  SP : 0x81ffff80  GP : 0x00000000  TP : 0x00000000
- A0 : 0x10000000  A1 : 0x0000004d  A2 : 0x00000065  A3 : 0x00000073
- A4 : 0x00000061  A5 : 0x00000067  A6 : 0x00000020  A7 : 0x00000031
- T0 : 0x00000000  T1 : 0x0000000a  T2 : 0x00000000  T3 : 0x00000000
- T4 : 0x00000000  T5 : 0x00000000  T6 : 0x00000000  S0 : 0x00000000
- S1 : 0x00000000  S2 : 0x00000000  S3 : 0x00000000  S4 : 0x00000000
- S5 : 0x00000000  S6 : 0x00000000  S7 : 0x00000000  S8 : 0x00000000
- S9 : 0x00000000  S10: 0x00000000  S11: 0x00000000
-====================================================================
+[TRAP TRIGGERED] Type: EXCEPTION | Code: 0x00000007 | mepc: 0x800003d8
 
-[CRITICAL!] Store Access Fault (Write/AMO Violation)
-[PANIC!] Kernel panic! panicked at src/trap/exeptions/h_store_amo_fault.rs:27:5:
+Type         : EXCEPTION
+Cause Code   : 0x00000007 (Store/AMO Access Fault)
+Program Ctr  : 0x800003d8 (mepc)
+Target Value : 0x80200000 (mtval: BadAddr or Opcode)
+CPU Status   : 0x00001800 (mstatus)
+
+REGISTER DUMP:
+mcause: 0x00000007 | mepc: 0x800003d8
+ra : 0x8000047a   sp : 0x81ffff80   gp : 0x00000000   tp : 0x00000000
+t0 : 0x80200000   t1 : 0xffffff00   t2 : 0x00000000   s0 : 0x00000000
+s1 : 0x00000000   a0 : 0x10000000   a1 : 0x0000004d   a2 : 0x00000065
+a3 : 0x00000073   a4 : 0x00000061   a5 : 0x00000067   a6 : 0x00000020
+a7 : 0x0000000a   s2 : 0x00000000   s3 : 0x00000000   s4 : 0x00000000
+s5 : 0x00000000   s6 : 0x00000000   s7 : 0x00000000   s8 : 0x00000000
+s9 : 0x00000000   s10: 0x00000000   s11: 0x00000000   t3 : 0x00000000
+t4 : 0x00000000   t5 : 0x00000000   t6 : 0x00000000
+
+[CRITICAL!] Store Access Fault (Write/AMO Violation)!
+
+[PANIC!] Kernel panic!
+panicked at src/trap/exeptions/h_store_amo_fault.rs:27:5:
 Security/Memory Fault (Store/AMO Access Fault):
-- Faulting Instruction (mepc): 0x800003d2
-- Invalid Write Target  (mtval): 0x00000000
+- Faulting Instruction (mepc): 0x800003d8
+- Invalid Write Target  (mtval): 0x80200000
 ```
+
+`Updated on: 6/10/26 at 20:24 by Alessio Maroni`
 
 ---
 

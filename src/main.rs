@@ -18,7 +18,10 @@ pub mod mm;
 use crate::info::Info;
 pub use crate::io::output::CONSOLE;
 use crate::mm::ALLOCATOR;
-use crate::arch::regs::stack::*;
+use crate::arch::mm::stack::{
+    *,
+    guard::setup_pmp_stack_guard,
+};
 
 use core::arch::global_asm;
 
@@ -61,9 +64,8 @@ pub extern "C" fn _setup() -> ! {
 pub fn _main() -> ! {
     CONSOLE.write_str("Message 1\n");
 
-    unsafe {
-        core::arch::asm!(".4byte 0x00000000");
-    }    
+    #[cfg(feature = "tests")]
+    trigger_0x7_store_access_fault();  
 
     CONSOLE.write_str("Message 2\n");
 

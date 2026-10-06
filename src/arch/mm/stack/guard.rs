@@ -1,30 +1,4 @@
-//! # PMP Stack Protection Module
-//!
-//! This module provides hardware-backed stack protection for RISC-V processors (e.g., RP2350) 
-//! running in Machine Mode (M-mode) using the Physical Memory Protection (PMP) unit.
-//!
-//! ## Overview
-//!
-//! Memory stacks on RISC-V grow downwards (high to low addresses). When a stack overflow occurs,
-//! the Stack Pointer (`sp`) crosses into unallocated or adjacent kernel memory. Without hardware 
-//! boundaries, this results in silent memory corruption.
-//!
-//! By setting up a PMP **Guard Page** (a unmapped or zero-permission region immediately below 
-//! the kernel stack), any attempt to write (`sw`, `sd`, `push`) or read (`lw`, `ld`, `pop`) 
-//! inside this guard boundary triggers an immediate **Store/Load Access Fault** (`0x7` / `0x5`) 
-//! before memory corruption occurs.
-
-unsafe extern "C" {
-    /// Linker symbol indicating the start address of the PMP Guard Page.
-    ///
-    /// # Realignment & Sizing
-    /// This symbol must be aligned to `guard_size` in the linker script to satisfy 
-    /// the RISC-V NAPOT (Naturally Aligned Power-Of-Two) requirement.
-    pub static _stack_guard_start: u8;
-
-    /// Linker symbol indicating the end address of the PMP Guard Page.
-    pub static _stack_guard_end: u8;
-}
+// TODO: Document
 
 /// Configures `pmpaddr0` and `pmpcfg0` to establish a zero-permission PMP Guard Page.
 ///

@@ -1,3 +1,5 @@
+// TODO: Add SAVE_REGS and RESTORE_REGS paths
+
 // File: trap_entry.s
 // Architecture: RISC-V (RV32I / RV32IMAC - Machine Mode)
 // Description: Main trap entry point for exception and interrupt handling.
