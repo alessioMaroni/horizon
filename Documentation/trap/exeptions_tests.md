@@ -68,7 +68,65 @@ pub fn trigger_0x0_inst_misaligned() {
     }
 }
 ```
+# Stack Overlow Test
 
+
+```rust
+#[unsafe(no_mangle)]
+pub fn _main() -> ! {
+    CONSOLE.write_str("Message 1\n");
+
+    #[cfg(feature = "tests")]
+    {
+        let depth: usize = 0;
+        trigger_natural_stack_overflow(depth);  
+    }
+
+    CONSOLE.write_str("Message 2\n");
+
+    loop {}
+}
+```
+
+```rust
+/// Triggers a **natural kernel stack overflow** through controlled infinite recursion.
+///
+/// This function allocates a localized stack frame buffer (`[u32; 32]`) on every recursive call, 
+/// rapidly depleting the available stack space until the Stack Pointer (`sp`) breaches the 
+/// lower boundary (`_stack_start`) or enters the PMP guard zone.
+///
+/// # Arguments
+///
+/// * `depth` - Tracks the current recursive depth level, used to throttle console logging 
+///             and prevent serial buffer flooding.
+///
+/// # Behavior
+///
+/// 1. Allocates 128 bytes of local array data on the stack per frame iteration.
+/// 2. Periodically logs telemetry updates to the console every 64 recursive steps.
+/// 3. Recurs indefinitely until the stack collapses, invoking the low-level trap entry's 
+///    stack bounds checker or triggering a hardware access fault.
+///
+/// # Note
+///
+/// Annotated with `#[allow(unconditional_recursion)]` to suppress the Rust compiler warning 
+/// regarding missing base cases, as infinite recursion is the precise mechanism required 
+/// to simulate memory exhaustion and validate emergency stack mitigation.
+#[cfg(feature = "tests")]
+#[allow(unconditional_recursion)]
+fn trigger_natural_stack_overflow(depth: usize) {
+    // Allocate a local data buffer on the stack to consume stack memory per frame.
+    let _frame_buffer: [u32; 32] = [0; 32];
+    
+    // Throttle progress reporting to the console every 64 calls to maintain simulation speed.
+    if depth % 64 == 0 {
+        CONSOLE.write_fmt(format_args!("Consuming stack... depth: {}\n", depth));
+    }
+
+    // Recurse further down the stack.
+    trigger_natural_stack_overflow(depth + 1);
+}
+```
 #### **1.2.2** Main Setup
 
 The main adaptation to the test for **Instruction Address Misaligned `(0x0)`**:
