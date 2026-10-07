@@ -38,7 +38,6 @@ pub extern "C" fn trap_handler(
     )
 {
 
-
     // Determines whether the trap is an interrupt or an exception:
     // * `true`  - It's an interrupt
     // * `false` - It's an exception
@@ -47,32 +46,7 @@ pub extern "C" fn trap_handler(
     // Extracts the exception or interrupt code (e.g., 3)
     let cause_code = mcause & !(1 << 31);
 
-    CONSOLE.write_fmt(format_args!(
-        "\n\x1b[1;33m[TRAP TRIGGERED]\x1b[0m Type: \x1b[1;36m{}\x1b[0m | Code: \x1b[1;33m{:#010x}\x1b[0m | mepc: \x1b[1;33m{:#010x}\x1b[0m\n",
-        if is_interrupt { "INTERRUPT" } else { "EXCEPTION" },
-        cause_code,
-        mepc
-    ));
-
-
-    let mtval = read_mtval();
-    let mstatus = read_mstatus();
-
-    // Log fundamental RISC-V Control and Status Registers (CSRs) and execution context.
-    CONSOLE.write_fmt(format_args!(
-        "\nType         : {}\n\
-         Cause Code   : {:#010x} ({})\n\
-         Program Ctr  : {:#010x} (mepc)\n\
-         Target Value : {:#010x} (mtval: BadAddr or Opcode)\n\
-         CPU Status   : {:#010x} (mstatus)\n\n\
-         ",
-        if is_interrupt { "INTERRUPT" } else { "EXCEPTION" },
-        cause_code,
-        get_cause_name(cause_code, is_interrupt),
-        mepc,
-        mtval,
-        mstatus
-    ));
+    write_info(is_interrupt, cause_code, mepc);
 
     // Perform a full CPU register dump if a valid trap frame snapshot exists.
     if !frame_ptr.is_null() {

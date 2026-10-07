@@ -60,4 +60,11 @@ SECTIONS
         . += 8192;
         _stack_end = .;
     }
+
+    .emergency_stack (NOLOAD) : ALIGN(16)
+    {
+        _emergency_stack_bottom = .;
+        . += 512;
+        _emergency_stack_top = .;
+    }
 }

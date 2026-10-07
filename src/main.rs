@@ -4,6 +4,7 @@
 extern crate alloc;
 
 #[cfg(feature = "tests")]
+#[allow(unused_imports)]
 use tests::trap::*;
 
 mod panic;
@@ -63,9 +64,6 @@ pub extern "C" fn _setup() -> ! {
 #[unsafe(no_mangle)]
 pub fn _main() -> ! {
     CONSOLE.write_str("Message 1\n");
-
-    #[cfg(feature = "tests")]
-    trigger_0x7_store_access_fault();  
 
     CONSOLE.write_str("Message 2\n");
 

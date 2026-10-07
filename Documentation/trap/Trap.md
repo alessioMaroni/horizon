@@ -1,4 +1,4 @@
-Ecco la versione completa e pronta per l'uso industriale/aerospaziale di Trap_handler.md.Ho integrato le scelte architetturali (Architectural Decisions) motivate per un sistema critico, le Macro Assembly per SAVE_REGS / RESTORE_REGS, la gestione dell'allineamento stack, della privilege transition (U-Mode / M-Mode) e la Rust Safe Bridge Integration.Puoi copiare direttamente il blocco di codice qui sotto nel tuo repository.Markdown# RISC-V Kernel Trap Handler
+# RSC-V Kernel Trap Handler
 
 ## 1. Definition
 
@@ -15,10 +15,13 @@ The Trap Handler operates in three distinct sequence phases:
 ---
 
 ## 1.1 Documentation Links
+
 * [**Exceptions Table**](./exeptions_table.md)
 * [**Exception Tests**](./exeptions_tests.md)
+* [**Stack Overflow Test**](./stack_overflow_test.md)
 
 ## 1.2 Code Links
+
 * [**Trap Entry Assembly (`trap_entry.s`)**](../../src/arch/trap/trap_entry.s)
 * [**Trap Handler Module (`mod.rs`)**](../../src/trap/mod.rs)
 * [**Trap Module Directory**](../../src/trap)
@@ -65,17 +68,41 @@ To preserve context, 128 bytes are allocated on the current stack during the ass
 To comply with high-reliability embedded software standards (e.g., ECSS / MISRA-C / Space-grade Rust patterns), the following design trade-offs and structural choices were implemented:
 
 ### 4.1 Frame Size and 16-Byte Stack Alignment
+
 * **Decision:** The `TrapFrame` size is strictly set to **128 bytes** (32 registers × 4 bytes).
 * **Rationale:** RISC-V RV32 ABI requires the stack pointer (`sp`) to remain **16-byte aligned** at all function call boundaries. Allocating 128 bytes ensures both complete integer register spilling and 16-byte alignment (`128 % 16 == 0`), avoiding unaligned stack faults when calling C/Rust functions from assembly.
 
 ### 4.2 Direct Vectoring Mode vs. Vectored Mode
+
 * **Decision:** The system configures `mtvec` in **Direct Mode** (`MODE = 00`).
 * **Rationale:** All exceptions and interrupts jump to a single entry point (`trap_entry`). While Vectored Mode eliminates dispatch overhead for interrupts, Direct Mode provides a single deterministic point for context preservation, stack guard validation, and centralized trap logging, minimizing assembly footprint and safety-critical audit surface.
 
 ### 4.3 Zero Allocation During Trap Execution
+
 * **Decision:** The trap handler uses the active thread/kernel stack and zero dynamic heap allocation.
 * **Rationale:** Dynamic heap allocation inside a trap handler introduces non-determinism, potential deadlock, and heap-exhaustion panics. Operating strictly on the pre-allocated stack guarantees constant-time execution overhead during context switching.
 
 ### 4.4 ABI Register Preservation
+
 * **Decision:** All 31 general-purpose registers are saved, including caller-saved (`t0`-`t6`, `a0`-`a7`) and callee-saved registers (`s0`-`s11`).
 * **Rationale:** Although standard C ABI functions preserve callee-saved registers, preemption or asynchronous interrupts can occur at any assembly instruction boundary. Saving the complete context guarantees total thread isolation and state integrity upon `mret`.
+
+### 4.5 Stack Overflow & Double-Fault Mitigation (Emergency Stack Architecture)
+
+**Decision**: Implement a pre-entry stack pointer sanity check coupled with an isolated, dedicated Emergency Stack **(512 bytes)** and post-mortem telemetry capture.
+
+Rationale: In standard bare-metal architectures, when a thread exhausts its stack space, the stack pointer (sp) breaches the lower boundary and overwrites adjacent memory or hits a protection zone. If a trap triggers while the stack is corrupted, a standard trap preamble (SAVE_REGS, which executes addi sp, sp, -128) attempts to allocate a TrapFrame on an invalid stack. This results in a catastrophic Double Fault, usually causing an unhandled hardware lockup or silent reset.
+
+Implementation Mechanism:
+
+1. **Pre-Entry Bounds Verification**: At the very start of trap_entry.s, before any stack memory is allocated, the working register t0 is saved in mscratch, and the current sp is validated against linker-defined boundaries (_stack_start and  _stack_end).
+
+2. **Interception**: If sp violates these boundaries, execution immediately bypasses standard frame allocation and branches to the emergency_stack_handler.
+
+3. **Stack Pivot**: The execution context pivots safely to a pre-allocated, isolated emergency stack (_emergency_stack_top).
+
+4. **Post-Mortem Telemetry**: Critical machine state registers (mcause, mepc) and the corrupted sp value (retrieved from mscratch) are passed as ABI arguments (a0, a1, a2) to a safe Rust handler (handle_stack_overflow_panic), which streams complete hardware context via write_info before securely halting the CPU.
+
+`SPDX-License-Identifier: MIT OR Apache-2.0
+Copyright (c) 2026 The RSC-V Kernel Project,
+See [License](../LICENSE)`
