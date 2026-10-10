@@ -1,10 +1,27 @@
-project Time extends "../shared.gpr" is
-   for Languages use ("Ada");
+--  @brief GNAT project configuration for the Time subsystem.
+--         Targets bare-metal RV32IMAC (RISC-V 32-bit) with custom runtime support.
+project Time is
+
+   --  Specify the directories for source code and compiled object files.
    for Source_Dirs use ("src");
    for Object_Dir use "obj";
-   for Library_Dir use "lib";
-   for Library_Name use "ada_time";
-   for Library_Kind use "static";
 
-   package Compiler renames Shared.Compiler;
+   --  Target architecture configuration for cross-compilation (RISC-V 64/32 toolchain target).
+   for Target use "riscv64-elf";
+   
+   --  Use a custom bare-metal Ada Runtime (RTS) located relative to the project directory.
+   for Runtime ("Ada") use project'Dir & "../rts";
+
+   package Compiler is
+      --  Compiler switches optimized for bare-metal, high-integrity execution:
+      for Default_Switches ("Ada") use (
+         "-gnatg",       --  Enable GNAT internal/gigi style checks (often used for specialized/RTS code).
+         "-O2",          --  Apply level 2 optimizations for performance and code size.
+         "-g0",          --  Omit debugging information to reduce binary footprint.
+         "-gnatp",       --  Suppress all checks (overflow, range, etc.) for maximum speed in verified code.
+         "-fno-PIC",     --  Disable Position Independent Code (required for fixed-address bare-metal kernels).
+         "-march=rv32imac", -- Target RISC-V 32-bit architecture with Integer, Multiplication, Atomic, and Compressed extensions.
+         "-mabi=ilp32"   --  Use the 32-bit Integer, Long, and Pointer ABI.
+      );
+   end Compiler;
 end Time;

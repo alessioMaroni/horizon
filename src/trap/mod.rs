@@ -5,10 +5,17 @@
 //! Rust trap dispatcher (`trap_handler`).
 
 pub mod exeptions;
+pub mod interrupt;
 pub mod helpers;
+
+use crate::CONSOLE;
+
+// TrapFrame structure representing the RV32 register context layout.
+use crate::arch::regs::general::TrapFrame;
 
 use crate::trap::helpers::*;
 
+// Exeptions crates
 use crate::trap::exeptions::h_break::handle_breakpoint;
 use crate::trap::exeptions::h_inst_alig::handle_bad_inst_alig;
 use crate::trap::exeptions::h_inst_featch_fault::handle_inst_access_fault;
@@ -19,8 +26,8 @@ use crate::trap::exeptions::h_store_amo_alig::handle_store_misaligned;
 use crate::trap::exeptions::h_store_amo_fault::handle_store_access_fault;
 use crate::trap::exeptions::h_syscalls::{handle_syscall_mmode, handle_syscall_umode};
 
-use crate::CONSOLE;
-use crate::arch::regs::general::TrapFrame;
+// Interrupts crates
+use crate::trap::interrupt::timer::handle_timer_tick;
 
 /// Main high-level trap handler called directly from the assembly stub.
 ///
@@ -46,13 +53,18 @@ pub extern "C" fn trap_handler(
     // Extracts the exception or interrupt code (e.g., 3)
     let cause_code = mcause & !(1 << 31);
 
-    write_info(is_interrupt, cause_code, mepc);
+    // If the trap is an exception rather than an interrupt, 
+    // log its diagnostic information.
+    if !is_interrupt {
+        write_info(is_interrupt, cause_code, mepc);
+    }
 
     // Perform a full CPU register dump if a valid trap frame snapshot exists.
-    if !frame_ptr.is_null() {
-        // # SAFETY: The pointer validity is verified against null. It is assumed that 
-        // `frame_ptr` references a correctly aligned, valid `TrapFrame` instance 
-        // allocated on the stack during the trap vector entry sequence.
+    if !is_interrupt && !frame_ptr.is_null() {
+        // # SAFETY: 
+        //  The pointer validity is verified against null. It is assumed that 
+        //  `frame_ptr` references a correctly aligned, valid `TrapFrame` instance 
+        //  allocated on the stack during the trap vector entry sequence.
         let frame = unsafe { &*frame_ptr };
         frame.dump(Some(mcause), Some(mepc));
     }
@@ -61,8 +73,18 @@ pub extern "C" fn trap_handler(
     if is_interrupt {
         match cause_code {
             // TODO: Finish the interrupt handler
+            // 0x3   => ,
+
+            // Machine Timer Interrupt
+            0x7   => handle_timer_tick(),
+            
+            // 0xb  => ,
             // Unhandled interrupt
-            _ => panic!("[PANIC!] Unhandled interrupt [ No.: {} ]!", cause_code),
+            _ => panic!(
+                "\x1b[1;31m[PANIC!] Unhandled interrupt\x1b[0m [ No.: \x1b[1;33m{}\x1b[0m at addr: \x1b[1;33m{:#010x}\x1b[0m ]!",
+                cause_code, 
+                mepc
+            ),
         }
     } else {
         match cause_code {

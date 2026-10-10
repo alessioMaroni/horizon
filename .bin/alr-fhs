@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Determine the absolute path of the directory where this script is located,
+# ensuring it works correctly regardless of the working directory it is invoked from.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Execute the local Alire binary within an FHS-compatible environment 
+# (necessary on systems like NixOS where standard dynamic paths and linkers differ),
+# forwarding any command-line arguments ($*) directly to `alr`.
+fhs-env -c "$SCRIPT_DIR/alr $*"

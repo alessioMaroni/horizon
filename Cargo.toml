@@ -9,7 +9,7 @@ exclude = [
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.3.0"
 edition = "2024"
 authors = ["The RSC-V Kernel Project"]
 license = "MIT OR Apache-2.0"
@@ -20,7 +20,7 @@ RSC-V-kernel = { path = "./" }
 
 [package]
 name = "RSC-V-kernel"
-version = "0.9.4"
+version = "0.12.6"
 authors.workspace = true
 license.workspace = true
 repository.workspace = true

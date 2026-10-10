@@ -1,9 +1,9 @@
 name = "time"
-description = "a high precision timer library for the RSC-V kernel"
+description = "An high precision timer library for the RSC-V kernel"
 version = "0.1.0-dev"
 
 authors = ["Alessio Maroni"]
-maintainers = ["Alessio Maroni <alessioMaroni0@gmail.com>"]
+maintainers = ["Alessio Maroni <alessiomaronidev@gmail.com>"]
 maintainers-logins = ["alessioMaroni"]
 licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
 website = ""

@@ -1,5 +1,19 @@
+--  Enforce zero-runtime profile, stripping out standard Ada runtime library dependencies 
+--  (such as tasking support, exception handling tables, and dynamic memory management).
 pragma No_Run_Time;
+
+--  Prohibit the propagation of exceptions across scope boundaries. If an exception 
+--  is raised, it cannot be handled dynamically, forcing immediate containment or system halting.
 pragma Restrictions (No_Exception_Propagation);
+
+--  Strictly forbid the use of explicit heap allocators (the 'new' keyword), 
+--  ensuring absolute static memory allocation.
 pragma Restrictions (No_Allocators);
+
+--  Prevent the compiler from generating any implicit or hidden heap allocations 
+--  behind the scenes (e.g., for variable-length types or dynamic container expansions).
 pragma Restrictions (No_Implicit_Heap_Allocations);
+
+--  Disable Ada's built-in tasking runtime primitives (tasks, protected objects, entries), 
+--  allowing you to implement your own deterministic custom scheduler instead.
 pragma Restrictions (No_Tasking);

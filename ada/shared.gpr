@@ -1,15 +1,18 @@
+--  @brief Abstract GNAT project defining shared compiler flags and target architecture
+--         settings for all subsystems in the RISC-V kernel. Abstract projects cannot be 
+--         built directly, but are meant to be extended by other projects (`extends`).
 abstract project Shared is
+
+   --  Restrict the project language scope strictly to Ada.
    for Languages use ("Ada");
 
    package Compiler is
-      for Switches ("Ada") use (
-         "-O2",
-         "-fno-strict-aliasing",
-         "-fno-PIC",
-         "-fno-pie",
-         "-mno-red-zone",
-         "-nostdlib",
-         "-ffreestanding"
+      --  Global architecture switches inherited by all extending projects,
+      --  ensuring consistent RISC-V 32-bit compilation targets.
+      for Default_Switches ("Ada") use (
+         "-march=rv32imac", -- Target RISC-V 32-bit architecture with Integer, Multiplication, Atomic, and Compressed extensions.
+         "-mabi=ilp32"   --  Use the 32-bit Integer, Long, and Pointer ABI.
       );
    end Compiler;
+
 end Shared;

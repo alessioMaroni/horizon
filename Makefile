@@ -1,23 +1,30 @@
+ALR ?= .bin/alr-fhs
 OVMF_PATH ?= /usr/share/edk2/ovmf/OVMF_CODE.fd
-TARGET-X86_64 := x86_64-unknown-uefi
-TARGET-ARMv6-M := thumbv6m-none-eabi
 
-.PHONY: build-ada build-x86_64 build run clean
+.PHONY: setup build-ada build debug test run run-debug run-test clean
 
-setup:
-	CC=gcc cargo install probe-rs-tools --force
-
-build-ada:
-	mkdir -p ada/time/obj ada/memory/obj
-	gcc -c ada/time/src/time.adb -O2 -g0 -gnatp -mno-red-zone -fno-PIC -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-strict-aliasing -o ada/time/obj/time.o
-
-	objcopy -I elf64-x86-64 -O pe-x86-64 ada/time/obj/time.o ada/time/obj/time.obj
-
-build:
+build: build-ada
 	mkdir -p .build
 	cargo build --target riscv32imac-unknown-none-elf --release
 	cargo objcopy --target riscv32imac-unknown-none-elf --release -- -O binary .build/kernel.bin
 	python3 scripts/uf2conv.py .build/kernel.bin -f 0xe48bff56 -o .build/kernel.uf2
+
+build-ada:
+	echo "Buildin Ada......."
+
+	mkdir -p ada/time/obj
+	.bin/alr-fhs -C ada/time exec -- riscv64-elf-gcc -c src/time.adb \
+		--RTS=$(PWD)/ada/rts \
+		-gnatg \
+		-gnatyN \
+		-O2 \
+		-g0 \
+		-gnatp \
+		-fno-PIC \
+		-march=rv32imac \
+		-mabi=ilp32 \
+		-o obj/time.o
+	echo "Done!"
 
 debug:
 	mkdir -p .build
@@ -30,13 +37,21 @@ test:
 	cargo objcopy --target riscv32imac-unknown-none-elf --release --features tests --bin RSC-V-kernel -- -O binary .build/kernel-test.bin
 
 run: build
-	qemu-system-riscv32 -M virt -bios none -nographic -kernel .build/kernel.bin
+	echo "Running......."
+
+	qemu-system-riscv32 -M virt -bios none -nographic \
+		-kernel target/riscv32imac-unknown-none-elf/release/RSC-V-kernel
+
+	echo "\n\n"
 
 run-debug: debug
 	qemu-system-riscv32 -M virt -bios none -nographic -kernel .build/kernel-debug.bin
 
 run-test: test
 	qemu-system-riscv32 -M virt -bios none -nographic -kernel .build/kernel-test.bin
+
+setup:
+	CC=gcc cargo install probe-rs-tools --force
 
 clean:
 	cargo clean

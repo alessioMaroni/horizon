@@ -1,0 +1,21 @@
+--  @brief Root GNAT project file for the RISC-V kernel, aggregating 
+--         multiple subsystem directories (time and memory) into a single build.
+project RSC_V_Ada is
+
+   --  Include source directories from different kernel modules.
+   for Source_Dirs use ("time/src", "memory/src");
+   
+   --  Specify the shared output directory for compiled object files.
+   for Object_Dir use "obj";
+
+   package Compiler is
+      --  Low-level freestanding compiler switches for bare-metal kernel development:
+      for Switches ("Ada") use (
+         "-O2",             --  Apply standard optimization level 2 for performance.
+         "-ffreestanding",  --  Assert a freestanding environment (no standard OS/hosted library assumptions).
+         "-nostdlib",       --  Do not use the standard system libraries during linking.
+         "-mno-red-zone"    --  Disable the red zone optimization on the stack (critical for safe trap/interrupt handling).
+      );
+   end Compiler;
+
+end RSC_V_Ada;

@@ -2,6 +2,8 @@
 #![no_main]
 
 extern crate alloc;
+#[allow(unused_imports)]
+use alloc::vec::Vec;
 
 #[cfg(feature = "tests")]
 #[allow(unused_imports)]
@@ -15,6 +17,7 @@ pub mod drivers;
 pub mod info;
 pub mod io;
 pub mod mm;
+pub mod time;
 
 use crate::info::Info;
 pub use crate::io::output::CONSOLE;
@@ -23,6 +26,7 @@ use crate::arch::mm::stack::{
     *,
     guard::setup_pmp_stack_guard,
 };
+use crate::time::init_timer;
 
 use core::arch::global_asm;
 
@@ -40,14 +44,6 @@ global_asm!(concat!(
 #[unsafe(no_mangle)]
 pub extern "C" fn _setup() -> ! {
     unsafe {
-        let guard_base = &_stack_guard_start as *const u8 as usize;
-        let guard_end = &_stack_guard_end as *const u8 as usize;
-        let guard_size = guard_end - guard_base;
-
-        setup_pmp_stack_guard(guard_base, guard_size);
-    }
-    // Set the Trap Handler
-    unsafe {
         core::arch::asm!(
             "la t0, trap_entry",
             "csrw mtvec, t0",
@@ -55,17 +51,27 @@ pub extern "C" fn _setup() -> ! {
         );
     }
 
-	let info: Info = Info::init();
-	ALLOCATOR.init(&info);
+    unsafe {
+        let guard_base = &_stack_guard_start as *const u8 as usize;
+        let guard_end = &_stack_guard_end as *const u8 as usize;
+        let guard_size = guard_end - guard_base;
 
-	_main();
+        setup_pmp_stack_guard(guard_base, guard_size);
+    }
+
+    {
+        let info: Info = Info::init();
+        ALLOCATOR.init(&info);
+    }
+
+    init_timer();
+
+    _main();
 }
 
 #[unsafe(no_mangle)]
 pub fn _main() -> ! {
-    CONSOLE.write_str("Message 1\n");
-
-    CONSOLE.write_str("Message 2\n");
+    CONSOLE.write_str("Hello, World!\n");
 
     loop {}
 }

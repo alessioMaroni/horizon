@@ -17,7 +17,7 @@ trap_entry:
     csrw mscratch, t0
 
     // Read temporary scratch context to initialize or preserve transition flow
-    csrr a0, mscratch
+    // csrr a0, mscratch
 
     // Load kernel stack lower boundary (`_stack_start`) into `t0`
     la t0, _stack_start

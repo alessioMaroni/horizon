@@ -1,23 +1,39 @@
 { pkgs ? import <nixpkgs> {} }:
 
+let
+  fhs = pkgs.buildFHSEnv {
+    name = "fhs-env";
+    targetPkgs = pkgs: with pkgs; [
+      zlib
+      glibc
+      gcc.cc.lib
+      zstd
+    ];
+  };
+in
 pkgs.mkShell {
   buildInputs = with pkgs; [
-    python3
-    gnat
     gnumake
+    python3
+    gdb
     rustup
     qemu
-    OVMF.fd
-    gcc-arm-embedded
     openocd
     usbutils
-    picotool    
+    picotool
+    unzip
+    fhs
   ];
 
   shellHook = ''
-    export PATH="${pkgs.gnat}/bin:$PATH"
-    export CC=gnatgcc
-    export OVMF_PATH="${pkgs.OVMF.fd}/FV/OVMF.fd"
     export RUSTC_WRAPPER=""
+    export PATH="$PWD/.bin:$PATH"
+
+    alr() {
+      $PWD/.bin/alr-fhs "$@"
+    }
+    export -f alr
+
+    echo "RSC-V Kernel Dev Environment Loaded"
   '';
 }

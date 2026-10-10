@@ -1,5 +1,3 @@
-// TODO: Document
-
 /// Configures `pmpaddr0` and `pmpcfg0` to establish a zero-permission PMP Guard Page.
 ///
 /// This function programs PMP Entry 0 in **NAPOT** (Naturally Aligned Power-Of-Two) mode 
@@ -50,21 +48,21 @@ pub fn setup_pmp_stack_guard(guard_base: usize, guard_size: usize) {
             // 1. Store NAPOT value into pmpaddr0
             "csrw pmpaddr0, {addr}",
             
-            // 2. Read current pmpcfg0 register
-            "csrr t0, pmpcfg0",
+            // 2. Read current pmpcfg0 register using the safe placeholder
+            "csrr {temp0}, pmpcfg0",
             
-            // 3. Clear bits 0..7 (PMP0 configuration slot) while preserving PMP1..PMP3
-            "li   t1, ~0xFF",
-            "and  t0, t0, t1",
+            // 3. Clear bits 0..7 while preserving PMP1..PMP3
+            "li   {temp1}, ~0xFF",
+            "and  {temp0}, {temp0}, {temp1}",
             
-            // 4. Merge new PMP0 configuration (0x98) and write back
-            "or   t0, t0, {cfg}",
-            "csrw pmpcfg0, t0",
+            // 4. Merge new PMP0 configuration and write back
+            "or   {temp0}, {temp0}, {cfg}",
+            "csrw pmpcfg0, {temp0}",
             
-            addr = in(reg) pmpaddr_val,
-            cfg = in(reg) pmp0cfg as usize,
-            out("t0") _,
-            out("t1") _,
+            addr   = in(reg) pmpaddr_val,
+            cfg    = in(reg) pmp0cfg as usize,
+            temp0  = lateout(reg) _,
+            temp1  = lateout(reg) _,
         );
     }
 }

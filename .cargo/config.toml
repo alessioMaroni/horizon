@@ -11,6 +11,7 @@ recursive_example = "rr --example recursions"
 [build]
 warnings = "deny"
 jobs = 1
+target = "riscv32imac-unknown-none-elf"
 rustc = "rustc"
 rustc-wrapper = "sccache"
 rustdoc = "rustdoc"
